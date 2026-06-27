@@ -5,7 +5,7 @@ description = "Local capture launcher + registry for GL.iNet device API profiles
 readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
-dependencies = ["gli4py", "aiohttp>=3.8.4", "paramiko>=3"]
+dependencies = ["gli4py", "aiohttp>=3.8.4", "paramiko>=3", "libpass>=1.8"]
 
 [project.scripts]
 gli4py-web = "glinet_profiler.cli:main"
@@ -50,7 +50,7 @@ strict = true
 files = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["uplink", "uplink.*", "paramiko", "gli4py", "gli4py.*"]
+module = ["uplink", "uplink.*", "paramiko", "passlib", "passlib.*", "gli4py", "gli4py.*"]
 ignore_missing_imports = true
 
 [tool.pylint."messages control"]
