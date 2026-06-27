@@ -25,8 +25,8 @@ uvx glinet-profiler
 From a source checkout:
 
 ```bash
-uv run gli4py-web            # starts the launcher, opens your browser
-uv run gli4py-web --no-browser --port 8765
+uv run glinet-profiler            # starts the launcher, opens your browser
+uv run glinet-profiler --no-browser --port 8765
 ```
 
 Then enter your router URL (e.g. `http://192.168.8.1`), username (`root`), and
