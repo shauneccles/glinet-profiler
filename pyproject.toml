@@ -1,11 +1,29 @@
 [project]
 name = "glinet-profiler"
-version = "0.1.0"
+version = "0.0.0"  # managed by release-please
 description = "Local capture launcher + registry for GL.iNet device API profiles."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
 dependencies = ["aiohttp>=3.8.4", "paramiko>=3", "libpass>=1.8"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/shauneccles/glinet-profiler"
+Repository = "https://github.com/shauneccles/glinet-profiler"
+Changelog = "https://github.com/shauneccles/glinet-profiler/blob/main/CHANGELOG.md"
 
 [project.scripts]
 glinet-profiler = "glinet_profiler.cli:main"
