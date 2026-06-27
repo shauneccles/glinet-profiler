@@ -650,10 +650,6 @@ source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "gli4py" },
-]
-
-[package.optional-dependencies]
-ssh = [
     { name = "paramiko" },
 ]
 
@@ -672,9 +668,8 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.8.4" },
     { name = "gli4py", git = "https://github.com/shauneccles/gli4py.git?branch=feat%2Fapi-enumerator" },
-    { name = "paramiko", marker = "extra == 'ssh'", specifier = ">=3" },
+    { name = "paramiko", specifier = ">=3" },
 ]
-provides-extras = ["ssh"]
 
 [package.metadata.requires-dev]
 dev = [

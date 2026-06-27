@@ -5,10 +5,7 @@ description = "Local capture launcher + registry for GL.iNet device API profiles
 readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.11"
-dependencies = ["gli4py", "aiohttp>=3.8.4"]
-
-[project.optional-dependencies]
-ssh = ["paramiko>=3"]
+dependencies = ["gli4py", "aiohttp>=3.8.4", "paramiko>=3"]
 
 [project.scripts]
 gli4py-web = "glinet_profiler.cli:main"
