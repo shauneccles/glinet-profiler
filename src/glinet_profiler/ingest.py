@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from gli4py.enumerator.probe import device_id
+from glinet_profiler.enumerator.probe import device_id
 
 from .registry import rebuild
 

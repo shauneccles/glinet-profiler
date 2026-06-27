@@ -3,28 +3,27 @@
 import json
 from typing import Any
 
-from gli4py.enumerator.probe import device_id
-
+from .enumerator.probe import device_id
 from .sanitize import project_report
 
 
 async def _enumerate(  # pylint: disable=too-many-locals
     host: str, username: str, password: str, *, ssh: bool
 ) -> dict[str, Any]:
-    """Run gli4py's read-only enumeration and return the raw report dict (performs I/O)."""
-    import aiohttp  # pylint: disable=import-outside-toplevel  # noqa: PLC0415  (kept local so tests can patch _enumerate without the I/O stack)
-    from gli4py.enumerator.probe import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
-        enumerate_device,
+    """Run the read-only enumeration and return the raw report dict (performs I/O)."""
+    import aiohttp  # pylint: disable=import-outside-toplevel  # noqa: PLC0415  (local so tests can patch _enumerate)
+
+    from .enumerator.probe import (
+        enumerate_device,  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
     )
-    from gli4py.enumerator.report import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
-        to_json,
+    from .enumerator.report import (
+        to_json,  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
     )
-    from gli4py.enumerator.ssh import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
+    from .enumerator.ssh import (  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
         SshUnavailable,
         ssh_discover,
     )
-    from gli4py.glinet import GLinet  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
-    from uplink import AiohttpClient  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
+    from .glinet_login import login  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
 
     base = host.rstrip("/")
     rpc_url = f"{base}/rpc"
@@ -38,9 +37,7 @@ async def _enumerate(  # pylint: disable=too-many-locals
             surface = None
 
     async with aiohttp.ClientSession() as session:
-        glinet = GLinet(base_url=rpc_url, client=AiohttpClient(session=session))
-        await glinet.login(username, password)
-        sid = glinet.sid or ""
+        sid = await login(session, rpc_url, username, password)
 
         async def caller(service: str, method: str, args: dict[str, Any] | None) -> dict[str, Any]:
             params: list[Any] = [sid, service, method]
@@ -59,7 +56,7 @@ async def _enumerate(  # pylint: disable=too-many-locals
         return raw
 
 
-async def capture(host: str, username: str, password: str, *, ssh: bool = False) -> dict[str, Any]:
-    """Enumerate (read-only) and return the sanitized, publishable profile."""
+async def capture(host: str, username: str, password: str, *, ssh: bool = True) -> dict[str, Any]:
+    """Enumerate (read-only; SSH attempted by default) and return the sanitized profile."""
     raw = await _enumerate(host, username, password, ssh=ssh)
     return project_report(raw, device_id(raw.get("device", {})))

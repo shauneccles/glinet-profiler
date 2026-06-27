@@ -34,9 +34,7 @@ def _no_auth_payload(method: str, params: dict[str, Any]) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": 0, "method": method, "params": params}
 
 
-async def login(
-    session: aiohttp.ClientSession, rpc_url: str, username: str, password: str
-) -> str:
+async def login(session: aiohttp.ClientSession, rpc_url: str, username: str, password: str) -> str:
     """Run the challenge-response login over `session`; return the session id (sid)."""
     async with session.post(
         rpc_url, json=_no_auth_payload("challenge", {"username": username})

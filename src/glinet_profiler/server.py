@@ -46,7 +46,7 @@ def make_app(token: str, *, registry_url: str | None = None) -> web.Application:
             body["host"],
             body.get("username") or "root",
             body.get("password", ""),
-            ssh=bool(body.get("ssh")),
+            ssh=bool(body.get("ssh", True)),
         )
         match = registry_mod.lookup(profile.get("model", ""), profile.get("firmware_version", ""))
         return web.json_response(

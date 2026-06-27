@@ -50,10 +50,12 @@ class _FakeSession:
 
 
 async def test_login_returns_sid_and_posts_challenge_then_login():
-    session = _FakeSession([
-        {"result": {"alg": 1, "salt": "abcdefgh", "nonce": "n0nce", "hash-method": "md5"}},
-        {"result": {"sid": "SID-123"}},
-    ])
+    session = _FakeSession(
+        [
+            {"result": {"alg": 1, "salt": "abcdefgh", "nonce": "n0nce", "hash-method": "md5"}},
+            {"result": {"sid": "SID-123"}},
+        ]
+    )
     sid = await login(session, "http://x/rpc", "root", "pw")
     assert sid == "SID-123"
     assert session.posted[0]["method"] == "challenge"
@@ -62,9 +64,11 @@ async def test_login_returns_sid_and_posts_challenge_then_login():
 
 
 async def test_login_raises_without_sid():
-    session = _FakeSession([
-        {"result": {"alg": 1, "salt": "abcdefgh", "nonce": "n", "hash-method": "md5"}},
-        {"result": {}},
-    ])
+    session = _FakeSession(
+        [
+            {"result": {"alg": 1, "salt": "abcdefgh", "nonce": "n", "hash-method": "md5"}},
+            {"result": {}},
+        ]
+    )
     with pytest.raises(ValueError):
         await login(session, "http://x/rpc", "root", "pw")
