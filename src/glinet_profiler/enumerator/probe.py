@@ -83,9 +83,16 @@ async def enumerate_device(  # pylint: disable=too-many-arguments,too-many-local
     device_info: dict[str, Any] | None = None,
     brute: str = "off",
     include_destructive: bool = False,
+    probe_writes: bool = False,
     ssh_surface: SshSurface | None = None,
 ) -> DeviceReport:
-    """Probe the read-only catalog surface and assemble a DeviceReport."""
+    """Probe the read-only catalog surface and assemble a DeviceReport.
+
+    SSH-discovered methods are, by default, recorded as ``DISCOVERED`` without an HTTP call.
+    ``probe_writes`` additionally calls WRITE-risk methods (changes config — spare routers);
+    ``probe_writes`` + ``include_destructive`` also calls DESTRUCTIVE methods (reboot/reset/
+    upgrade), deferred to the very end so they don't abort the rest of the scan.
+    """
     if brute not in {"off", "dangerous", "dangerous_full"}:
         raise ValueError(f"brute must be 'off', 'dangerous', or 'dangerous_full'; got {brute!r}")
 
@@ -140,30 +147,56 @@ async def enumerate_device(  # pylint: disable=too-many-arguments,too-many-local
             )
     probed = {(m.service, m.method) for m in methods}
     if ssh_surface is not None:
+
+        def _record(
+            service: str,
+            method: str,
+            status: ProbeStatus,
+            code: int | None,
+            value: object,
+            mrisk: Risk,
+            params: list[str] | None,
+        ) -> None:
+            methods.append(
+                MethodReport(
+                    service=service,
+                    method=method,
+                    status=status,
+                    error_code=code,
+                    risk=mrisk,
+                    discovered_by="ssh",
+                    params=params,
+                    schema=schema_of(value) if value is not None else None,
+                    value=redact(value, enabled=redact_values) if value is not None else None,
+                    covered_by=covered_by(service, method),
+                )
+            )
+
+        # destructive probes (reboot/reset/upgrade) run LAST so one that kills the
+        # SSH/HTTP session doesn't throw away the rest of the scan.
+        deferred: list[tuple[str, str, list[str] | None]] = []
         for service, smethods in ssh_surface.methods.items():
             params_map = ssh_surface.params.get(service, {})
             for method in smethods:
                 if (service, method) in probed:
                     continue
                 probed.add((service, method))
+                mrisk = risk_of(method)
+                params = params_map.get(method)
                 if is_read_method(method):
                     status, code, value = await _probe(caller, service, method)
+                elif probe_writes and mrisk is Risk.WRITE:
+                    status, code, value = await _probe(caller, service, method)  # config-changing
+                elif probe_writes and include_destructive and mrisk is Risk.DANGEROUS:
+                    deferred.append((service, method, params))
+                    continue
                 else:
-                    status, code, value = ProbeStatus.OTHER, None, None  # don't call non-reads
-                methods.append(
-                    MethodReport(
-                        service=service,
-                        method=method,
-                        status=status,
-                        error_code=code,
-                        risk=risk_of(method),
-                        discovered_by="ssh",
-                        params=params_map.get(method),
-                        schema=schema_of(value) if value is not None else None,
-                        value=redact(value, enabled=redact_values) if value is not None else None,
-                        covered_by=covered_by(service, method),
-                    )
-                )
+                    # capture from the device's files; never HTTP-call a non-read endpoint
+                    status, code, value = ProbeStatus.DISCOVERED, None, None
+                _record(service, method, status, code, value, mrisk, params)
+        for service, method, params in deferred:
+            status, code, value = await _probe(caller, service, method)
+            _record(service, method, status, code, value, Risk.DANGEROUS, params)
         device_info = {
             **(device_info or {}),
             "accounts": ssh_surface.accounts,

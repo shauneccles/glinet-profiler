@@ -33,7 +33,16 @@ MAN = {"devices": [{"id": "mt6000_4.9.0", "model": "mt6000", "firmware_version":
 
 @pytest.fixture
 async def client(aiohttp_client, monkeypatch):
-    async def fake_capture(host, username, password, *, ssh=False, on_progress=None):  # noqa: ARG001
+    async def fake_capture(
+        host,
+        username,
+        password,
+        *,
+        ssh=False,
+        dangerous=False,
+        include_destructive=False,
+        on_progress=None,
+    ):  # noqa: ARG001
         if on_progress:
             await on_progress(
                 {"event": "progress", "phase": "probe", "done": 1, "message": "probing"}

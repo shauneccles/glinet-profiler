@@ -31,6 +31,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--no-ssh", action="store_true", help="skip SSH ground-truth discovery")
     parser.add_argument(
+        "--dangerous",
+        action="store_true",
+        help="DANGER: HTTP-call WRITE endpoints (set_/add_/...) — changes your router's config. Spare routers only.",
+    )
+    parser.add_argument(
+        "--include-destructive",
+        action="store_true",
+        help="DANGER: also call DESTRUCTIVE methods (reboot/factory-reset/firmware), last. Implies --dangerous. Sacrificial routers only.",
+    )
+    parser.add_argument(
         "--output", "-o", help="write the profile JSON here (default: <id>.json in the cwd)"
     )
     # web-UI mode flags (used when no IP is given)
@@ -58,9 +68,16 @@ async def _capture_cli(args: argparse.Namespace) -> int:
     async def _progress(event: dict[str, Any]) -> None:
         print(f"  {event.get('message', '')}", file=sys.stderr)
 
+    dangerous = args.dangerous or args.include_destructive  # destructive implies write-probing
     try:
         profile = await capture(
-            args.ip, args.username, password, ssh=not args.no_ssh, on_progress=_progress
+            args.ip,
+            args.username,
+            password,
+            ssh=not args.no_ssh,
+            dangerous=dangerous,
+            include_destructive=args.include_destructive,
+            on_progress=_progress,
         )
     except Exception as exc:  # pylint: disable=broad-exception-caught
         print(f"capture failed: {exc}", file=sys.stderr)

@@ -16,6 +16,8 @@
     <label>Username <input id="username" type="text" value="root"></label>
     <label>Password <input id="password" type="password" required></label>
     <label class="chk"><input id="ssh" type="checkbox" checked> try SSH ground-truth (default; falls back automatically)</label>
+    <label class="chk danger"><input id="dangerous" type="checkbox"> ⚠ probe write endpoints — <b>changes your router's config</b> (spare routers only)</label>
+    <label class="chk danger"><input id="destructive" type="checkbox" disabled> ☢ also probe destructive: reboot / factory-reset / firmware (<b>sacrificial routers only</b>)</label>
     <button type="submit">Capture</button>
   </form>
   <div id="progress" class="progress" hidden>

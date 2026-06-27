@@ -19,6 +19,8 @@ class ProbeStatus(StrEnum):
     """Outcome of probing one (service, method)."""
 
     AVAILABLE = "available"
+    # found in the device's own RPC/validator files via SSH; not HTTP-called
+    DISCOVERED = "discovered"
     ABSENT = "absent"
     NEEDS_PARAMS = "needs_params"
     AUTH_ERROR = "auth_error"

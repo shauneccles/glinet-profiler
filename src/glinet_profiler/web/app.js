@@ -33,6 +33,13 @@ function showProgress(on) { $("progress").hidden = !on; }
 
 async function onCapture(e) {
   e.preventDefault();
+  const dangerous = $("dangerous").checked;
+  const destructive = $("destructive").checked && dangerous;
+  if (dangerous && !confirm(
+    destructive
+      ? "RECKLESS: this will CALL write endpoints AND destructive methods (reboot / factory-reset / firmware) on your router. Only do this on a sacrificial device. Continue?"
+      : "DANGEROUS: this will CALL write endpoints on your router, changing its configuration. Only do this on a spare device. Continue?"
+  )) return;
   $("status").textContent = "";
   $("result").innerHTML = ""; $("banner").innerHTML = ""; $("actions").hidden = true;
   setProgress("Starting…", null); showProgress(true);
@@ -45,6 +52,8 @@ async function onCapture(e) {
         username: $("username").value.trim() || "root",
         password: $("password").value,
         ssh: $("ssh").checked,
+        dangerous: dangerous,
+        include_destructive: destructive,
       }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
@@ -104,3 +113,8 @@ function onSubmit() { if (submitUrl) window.open(submitUrl, "_blank", "noopener"
 $("form").addEventListener("submit", onCapture);
 $("download").addEventListener("click", onDownload);
 $("submit").addEventListener("click", onSubmit);
+// destructive probing only unlocks once write-probing is enabled
+$("dangerous").addEventListener("change", () => {
+  $("destructive").disabled = !$("dangerous").checked;
+  if (!$("dangerous").checked) $("destructive").checked = false;
+});

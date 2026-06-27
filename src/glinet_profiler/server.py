@@ -60,6 +60,8 @@ def make_app(
                 body.get("username") or "root",
                 body.get("password", ""),
                 ssh=bool(body.get("ssh", True)),
+                dangerous=bool(body.get("dangerous", False)),
+                include_destructive=bool(body.get("include_destructive", False)),
                 on_progress=emit,
             )
             manifest = await registry_mod.fetch_manifest(registry_url)

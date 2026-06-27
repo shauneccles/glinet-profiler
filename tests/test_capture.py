@@ -38,7 +38,9 @@ RAW = {
 
 
 async def test_capture_returns_sanitized_profile(monkeypatch):
-    async def fake_enumerate(host, username, password, *, ssh, on_progress):  # noqa: ARG001
+    async def fake_enumerate(
+        host, username, password, *, ssh, dangerous=False, include_destructive=False, on_progress
+    ):  # noqa: ARG001
         return RAW
 
     monkeypatch.setattr(capture_mod, "_enumerate", fake_enumerate)
@@ -54,7 +56,9 @@ async def test_capture_returns_sanitized_profile(monkeypatch):
 async def test_capture_passes_ssh_flag(monkeypatch):
     seen = {}
 
-    async def fake_enumerate(host, username, password, *, ssh, on_progress):  # noqa: ARG001
+    async def fake_enumerate(
+        host, username, password, *, ssh, dangerous=False, include_destructive=False, on_progress
+    ):  # noqa: ARG001
         seen["ssh"] = ssh
         return RAW
 
@@ -63,13 +67,30 @@ async def test_capture_passes_ssh_flag(monkeypatch):
     assert seen["ssh"] is True
 
 
+async def test_capture_passes_dangerous_flags(monkeypatch):
+    seen = {}
+
+    async def fake_enumerate(
+        host, username, password, *, ssh, dangerous=False, include_destructive=False, on_progress
+    ):  # noqa: ARG001
+        seen["dangerous"] = dangerous
+        seen["include_destructive"] = include_destructive
+        return RAW
+
+    monkeypatch.setattr(capture_mod, "_enumerate", fake_enumerate)
+    await capture("http://x", "root", "pw", dangerous=True, include_destructive=True)
+    assert seen == {"dangerous": True, "include_destructive": True}
+
+
 async def test_capture_forwards_progress(monkeypatch):
     events = []
 
     async def record(event):
         events.append(event)
 
-    async def fake_enumerate(host, username, password, *, ssh, on_progress):  # noqa: ARG001
+    async def fake_enumerate(
+        host, username, password, *, ssh, dangerous=False, include_destructive=False, on_progress
+    ):  # noqa: ARG001
         await on_progress({"event": "progress", "phase": "probe", "done": 1, "message": "x"})
         return RAW
 

@@ -23,8 +23,15 @@ def _base_url(host: str) -> str:
     return base
 
 
-async def _enumerate(  # pylint: disable=too-many-locals
-    host: str, username: str, password: str, *, ssh: bool, on_progress: ProgressFn
+async def _enumerate(  # pylint: disable=too-many-locals,too-many-arguments
+    host: str,
+    username: str,
+    password: str,
+    *,
+    ssh: bool,
+    dangerous: bool,
+    include_destructive: bool,
+    on_progress: ProgressFn,
 ) -> dict[str, Any]:
     """Run the read-only enumeration and return the raw report dict (performs I/O)."""
     import aiohttp  # pylint: disable=import-outside-toplevel  # noqa: PLC0415  (local so tests can patch _enumerate)
@@ -104,7 +111,18 @@ async def _enumerate(  # pylint: disable=too-many-locals
         info_env = await caller("system", "get_info", None)
         info = info_env.get("result")
         device_info = info if isinstance(info, dict) else {}
-        report = await enumerate_device(caller, device_info=device_info, ssh_surface=surface)
+        if dangerous:
+            note = "⚠ Dangerous mode: calling WRITE endpoints — this changes your router's config."
+            if include_destructive:
+                note += " DESTRUCTIVE methods (reboot/reset/upgrade) will be called LAST."
+            await on_progress({"event": "progress", "phase": "warn", "message": note})
+        report = await enumerate_device(
+            caller,
+            device_info=device_info,
+            ssh_surface=surface,
+            probe_writes=dangerous,
+            include_destructive=include_destructive,
+        )
         raw: dict[str, Any] = json.loads(to_json(report))
         return raw
 
@@ -115,14 +133,29 @@ async def capture(
     password: str,
     *,
     ssh: bool = True,
+    dangerous: bool = False,
+    include_destructive: bool = False,
     on_progress: ProgressFn | None = None,
 ) -> dict[str, Any]:
-    """Enumerate (read-only; SSH attempted by default) and return the sanitized profile.
+    """Enumerate (read-only by default; SSH attempted by default) and return the sanitized profile.
+
+    By default no write/set endpoint is ever HTTP-called — SSH-discovered writes are recorded as
+    ``discovered``. ``dangerous`` additionally calls WRITE endpoints (changes config — spare
+    routers); ``dangerous`` + ``include_destructive`` also calls DESTRUCTIVE methods last
+    (reboot/reset/upgrade — sacrificial routers).
 
     ``on_progress``, if given, is awaited with ``{"event": "progress", ...}`` dicts as the
     capture proceeds (ssh → login → probe → sanitize), for live UI/console feedback.
     """
     progress = on_progress or _noop
-    raw = await _enumerate(host, username, password, ssh=ssh, on_progress=progress)
+    raw = await _enumerate(
+        host,
+        username,
+        password,
+        ssh=ssh,
+        dangerous=dangerous,
+        include_destructive=include_destructive,
+        on_progress=progress,
+    )
     await progress({"event": "progress", "phase": "sanitize", "message": "Sanitizing profile…"})
     return project_report(raw, device_id(raw.get("device", {})))
