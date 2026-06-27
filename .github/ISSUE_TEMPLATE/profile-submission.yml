@@ -1,0 +1,24 @@
+name: Submit a device profile
+description: Contribute a captured GL.iNet API profile to the registry.
+title: "Add profile: "
+labels: [profile-submission]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing! **Attach the `<id>.json` you downloaded from the
+        glinet-profiler launcher** in the field below — drag-and-drop the file,
+        don't paste its contents. A bot validates it and opens a pull request.
+  - type: textarea
+    id: profile
+    attributes:
+      label: Profile file
+      description: Drag-and-drop your downloaded `<id>.json` here.
+      placeholder: Drop the .json file here…
+    validations:
+      required: true
+  - type: input
+    id: notes
+    attributes:
+      label: Notes (optional)
+      description: Anything else we should know.

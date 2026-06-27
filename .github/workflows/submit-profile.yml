@@ -1,0 +1,70 @@
+name: Profile submission
+on:
+  issues:
+    types: [opened, labeled]
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+jobs:
+  ingest:
+    if: contains(github.event.issue.labels.*.name, 'profile-submission')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.11"
+      - run: uv sync --all-extras --dev
+      - name: Extract attachment URL
+        id: url
+        env:
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          URL=$(printf '%s' "$BODY" | grep -oiE 'https://github\.com/[^)" ]*/files/[0-9]+/[^)" ]+\.json' | head -1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Download + ingest
+        id: ingest
+        if: steps.url.outputs.url != ''
+        run: |
+          curl -sL -A glinet-profiler-bot "${{ steps.url.outputs.url }}" -o submission.json
+          if ID=$(uv run python scripts/ingest_submission.py submission.json 2>err.txt); then
+            echo "id=$ID" >> "$GITHUB_OUTPUT"
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            { echo "error<<ERR_EOF"; cat err.txt; echo "ERR_EOF"; } >> "$GITHUB_OUTPUT"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open pull request
+        if: steps.ingest.outputs.ok == 'true'
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
+        with:
+          add-paths: src/glinet_profiler/data
+          branch: submit/${{ steps.ingest.outputs.id }}
+          delete-branch: true
+          title: "Add profile: ${{ steps.ingest.outputs.id }}"
+          commit-message: "feat(registry): add ${{ steps.ingest.outputs.id }}"
+          body: |
+            Automated profile submission from #${{ github.event.issue.number }}.
+      - name: Comment result on the issue
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          FOUND_URL: ${{ steps.url.outputs.url }}
+          OK: ${{ steps.ingest.outputs.ok }}
+          DEV_ID: ${{ steps.ingest.outputs.id }}
+          ERR: ${{ steps.ingest.outputs.error }}
+        with:
+          script: |
+            let body;
+            if (!process.env.FOUND_URL) {
+              body = "I couldn't find a `.json` attachment. Please edit the issue and drag-and-drop the file you downloaded from the launcher.";
+            } else if (process.env.OK === 'true') {
+              body = "✅ Validated `" + process.env.DEV_ID + "` and opened a pull request. Thanks for contributing!";
+            } else {
+              body = "❌ Your submission couldn't be validated:\n\n```\n" + (process.env.ERR || "unknown error") + "\n```";
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, body,
+            });
