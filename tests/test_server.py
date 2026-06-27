@@ -58,3 +58,13 @@ async def test_index_is_served(client):
     resp = await client.get("/")
     assert resp.status == 200
     assert "glinet-profiler" in await resp.text()
+
+
+def test_open_browser_skips_under_wsl(monkeypatch):
+    import glinet_profiler.server as srv  # pylint: disable=import-outside-toplevel
+
+    monkeypatch.setattr(srv, "_is_wsl", lambda: True)
+    calls = []
+    monkeypatch.setattr(srv.webbrowser, "open", calls.append)
+    srv._open_browser("http://127.0.0.1:1234/")  # pylint: disable=protected-access
+    assert not calls  # under WSL we must NOT invoke the (broken) browser opener

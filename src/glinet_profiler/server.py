@@ -1,6 +1,6 @@
 """The local launcher web server (aiohttp, 127.0.0.1, token-guarded API)."""
 
-import asyncio
+import os
 import secrets
 import socket
 import webbrowser
@@ -68,6 +68,27 @@ def make_app(token: str, *, registry_url: str | None = None) -> web.Application:
     return app
 
 
+def _is_wsl() -> bool:
+    """Detect WSL, where the default browser opener (gio) fails with 'Operation not supported'."""
+    if os.environ.get("WSL_DISTRO_NAME"):
+        return True
+    try:
+        return "microsoft" in Path("/proc/version").read_text(encoding="utf-8").lower()
+    except OSError:
+        return False
+
+
+def _open_browser(url: str) -> None:
+    """Best-effort open the URL; under WSL (or on failure) just point the user at the printed URL."""
+    if _is_wsl():
+        print("  (auto-open isn't supported here — open the URL above in your browser)")
+        return
+    try:
+        webbrowser.open(url)
+    except (webbrowser.Error, OSError):  # pragma: no cover - best-effort, never fatal
+        print("  (couldn't auto-open a browser — open the URL above)")
+
+
 def serve(*, port: int = 0, open_browser: bool = True, registry_url: str | None = None) -> None:
     """Start the launcher on 127.0.0.1 (ephemeral port by default) and optionally open the browser."""
     token = secrets.token_urlsafe(16)
@@ -76,17 +97,15 @@ def serve(*, port: int = 0, open_browser: bool = True, registry_url: str | None 
     sock.bind(("127.0.0.1", port))
     actual_port = sock.getsockname()[1]
     url = f"http://127.0.0.1:{actual_port}/?t={token}"
+    app = make_app(token, registry_url=registry_url)
 
-    async def _run() -> None:
-        runner = web.AppRunner(make_app(token, registry_url=registry_url))
-        await runner.setup()
-        await web.SockSite(runner, sock).start()
+    async def _on_startup(_app: web.Application) -> None:
         print(f"glinet-profiler is running at:\n  {url}\nPress Ctrl+C to stop.")
         if open_browser:
-            webbrowser.open(url)
-        await asyncio.Event().wait()
+            _open_browser(url)
 
-    try:
-        asyncio.run(_run())
-    except KeyboardInterrupt:
-        print("\nstopped.")
+    app.on_startup.append(_on_startup)
+    # web.run_app installs signal handlers and drains in-flight requests on Ctrl+C
+    # (graceful shutdown) — no more "Executor shutdown has been called" tracebacks.
+    web.run_app(app, sock=sock, print=None, handle_signals=True)
+    print("stopped.")
