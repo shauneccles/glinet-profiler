@@ -13,10 +13,9 @@ PROFILE = {
 }
 
 
-def test_prefilled_issue_url():
+def test_prefilled_issue_url_points_at_form():
     url = prefilled_issue_url(PROFILE, repo="owner/repo")
     assert url.startswith("https://github.com/owner/repo/issues/new?")
     query = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+    assert query["template"][0] == "profile-submission.yml"
     assert "mt6000" in query["title"][0] and "4.9.0" in query["title"][0]
-    assert "mt6000_4.9.0.json" in query["body"][0]
-    assert query["labels"][0] == "profile-submission"
