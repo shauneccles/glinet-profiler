@@ -4,8 +4,10 @@ import asyncio
 import re
 import shlex
 
+import paramiko
+
 from .catalog import is_read_method
-from .models import SshSurface  # noqa: F401  (used by ssh_discover in Task 8)
+from .models import SshSurface
 
 _LUA_FUNC = re.compile(r"function\s+M\.([A-Za-z0-9_]+)")
 _LUA_ASSIGN = re.compile(r"M\.([A-Za-z0-9_]+)\s*=\s*function")
@@ -112,10 +114,6 @@ async def ssh_discover(  # pylint: disable=too-many-arguments,too-many-locals
     timeout: float = 12.0,
 ) -> SshSurface:
     """Read-only SSH recon -> SshSurface. Raises SshUnavailable on failure."""
-    try:
-        import paramiko  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
-    except ImportError as exc:  # pragma: no cover - exercised via integration env
-        raise SshUnavailable("paramiko not installed (pip install paramiko)") from exc
 
     def _run() -> tuple[str, dict[str, str], dict[str, str]]:  # pylint: disable=too-many-locals
         client = paramiko.SSHClient()
