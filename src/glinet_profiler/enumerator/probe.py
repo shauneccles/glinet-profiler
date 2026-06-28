@@ -155,6 +155,9 @@ async def enumerate_device(  # pylint: disable=too-many-arguments,too-many-local
 
     probed = {(m.service, m.method) for m in methods}
     if brute != "off":
+        # NOTE: brute is never enabled from capture()/CLI/web. If it is ever wired up with
+        # include_destructive, destructive seeds here are probed concurrently (not deferred-
+        # last like the SSH path) — add the same deferral before exposing it.
         plan = brute_plan(
             dangerous=True,
             dangerous_full=(brute == "dangerous_full"),
@@ -168,7 +171,10 @@ async def enumerate_device(  # pylint: disable=too-many-arguments,too-many-local
     probed = {(m.service, m.method) for m in methods}
     if ssh_surface is not None:
         # destructive probes (reboot/reset/upgrade) run LAST so one that kills the
-        # SSH/HTTP session doesn't throw away the rest of the scan.
+        # SSH/HTTP session doesn't throw away the rest of the scan. NOTE: the WRITE-vs-
+        # DANGEROUS split below is only as good as catalog.DESTRUCTIVE_METHODS — a
+        # destructive method missing from that set is treated as a WRITE and, under
+        # --dangerous, called concurrently rather than deferred. Keep that set current.
         tasks: list[Awaitable[MethodReport]] = []
         deferred: list[tuple[str, str, list[str] | None]] = []
         for service, smethods in ssh_surface.methods.items():
