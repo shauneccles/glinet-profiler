@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.0](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.0.1...glinet-profiler-v0.1.0) (2026-06-28)
+
+
+### Features
+
+* **enumerate:** capture SSH-discovered writes; --dangerous/--include-destructive to probe them ([c75433c](https://github.com/shauneccles/glinet-profiler/commit/c75433c11f833a89a67c91642f30f7a2f942ffd0))
+* **ssh:** parse validator bytecode; drop unverified .so write candidates ([c778de2](https://github.com/shauneccles/glinet-profiler/commit/c778de2af532bab416c3f87abaa1dc8f2d5209a7))
+
+
+### Bug Fixes
+
+* **capture:** per-request RPC timeout so a hanging method can't stall the scan ([02e8085](https://github.com/shauneccles/glinet-profiler/commit/02e8085767e9b7d84876d86c03024aa8afadae39))
+* **ssh:** only distrust ELF .so handlers, not all compiled handlers ([4d3430d](https://github.com/shauneccles/glinet-profiler/commit/4d3430d1b0e942fbe6f8f525a155454d40e22108))
+
+
+### Documentation
+
+* clarify _enumerate is read-only only by default ([02deeab](https://github.com/shauneccles/glinet-profiler/commit/02deeabfd14980bf59379f70cdef56ac1fc5b4f4))
+* **enumerate:** note DESTRUCTIVE_METHODS dependency + brute deferral caveat (review) ([bf9ba6d](https://github.com/shauneccles/glinet-profiler/commit/bf9ba6d7a15dd5f02af62284097273157ee1e63c))
+
 ## 0.0.1 (2026-06-27)
 
 
