@@ -39,8 +39,12 @@ def device_id(device: dict[str, Any]) -> str:
 async def _probe(
     caller: Caller, service: str, method: str
 ) -> tuple[ProbeStatus, int | None, object]:
+    # Probe with an empty params object, not None. Many GL.iNet handlers index `params.x`
+    # directly; with no params table they crash ("attempt to index a nil value"), returning
+    # non-JSON (-> UNREACHABLE) and leaving a Lua stack trace in the router's log. An empty
+    # table indexes cleanly, so the method returns its real result or a clean error instead.
     try:
-        envelope = await caller(service, method, None)
+        envelope = await caller(service, method, {})
     except Exception:  # pylint: disable=broad-except
         return ProbeStatus.UNREACHABLE, None, None
     result = classify(envelope)

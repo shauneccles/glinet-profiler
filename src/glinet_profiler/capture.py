@@ -13,11 +13,13 @@ from .sanitize import project_report
 # Async progress sink: awaited with `{"event": "progress", "phase": ..., ...}` dicts.
 ProgressFn = Callable[[dict[str, Any]], Awaitable[None]]
 
-# A scan shares the router's tiny fcgiwrap RPC backend (4 workers) with whatever else is hitting
-# it — e.g. Home Assistant polling. When there's no free worker a probe gets a 5xx / refused
-# connection that isn't a real answer; retry those, backing off *inside* the concurrency slot so
-# the scan yields to the backend instead of piling on. A real JSON-RPC reply (any <500 body) is
-# never retried, and a timeout isn't either (that's a slow method, not a worker shortage).
+# A scan shares the router's tiny fcgiwrap RPC backend (4 workers) with whatever else hits /rpc
+# (e.g. Home Assistant polling). When there's no free worker a probe gets a 5xx or a refused
+# connection that isn't a real answer — retry those with exponential backoff *inside* the
+# concurrency slot, so a saturated scan yields instead of piling on. A real JSON-RPC reply is
+# never retried; a timeout isn't either (that's a genuinely slow method — the cap below is set
+# high enough for the slow-but-finite ones, and a true hang shouldn't tie a worker up on retries).
+_REQUEST_TIMEOUT = 20.0  # seconds; a few methods legitimately take >12s (e.g. mptun.get_token ~15s)
 _MAX_PROBE_RETRIES = 3
 _RETRY_BACKOFF = 0.4  # seconds; exponential: 0.4, 0.8, 1.6
 
@@ -30,16 +32,16 @@ async def _rpc_post(
     retries: int = _MAX_PROBE_RETRIES,
     backoff: float = _RETRY_BACKOFF,
 ) -> dict[str, Any]:
-    """POST a JSON-RPC call, retrying only transient backend saturation (5xx / connection refused).
+    """POST a JSON-RPC call, retrying only transient backend saturation (5xx / refused connection).
 
-    Timeouts are deliberately not retried — those are a genuinely slow method, not a worker
-    shortage. Backing off here happens while holding the caller's concurrency slot, so a saturated
-    scan self-throttles instead of hammering the backend.
+    Backing off happens while holding the caller's concurrency slot, so a saturated scan
+    self-throttles instead of hammering. Timeouts are not retried (genuinely slow methods); the
+    per-request cap is set high enough for the slow-but-finite ones, and the rest stay UNREACHABLE.
     """
     for attempt in range(retries + 1):
         try:
             async with session.post(
-                url, json=payload, timeout=aiohttp.ClientTimeout(total=12)
+                url, json=payload, timeout=aiohttp.ClientTimeout(total=_REQUEST_TIMEOUT)
             ) as resp:
                 if resp.status >= 500:
                     raise ConnectionError(f"backend HTTP {resp.status}")
@@ -130,9 +132,9 @@ async def _enumerate(  # pylint: disable=too-many-locals,too-many-arguments
             if args is not None:
                 params.append(args)
             payload = {"jsonrpc": "2.0", "id": 0, "method": "call", "params": params}
-            # _rpc_post applies a 12s per-request cap (some methods hang on a slow external lookup,
-            # e.g. wg-client.get_country_url) and retries transient worker-shortage failures; a
-            # timeout still propagates and the enumerator's _probe records the method UNREACHABLE.
+            # _rpc_post applies a 20s per-request cap and retries transient worker-shortage failures
+            # (5xx / refused). A genuinely slow method that exceeds the cap propagates and the
+            # enumerator's _probe records it UNREACHABLE.
             data = await _rpc_post(session, rpc_url, payload)
             probed += 1
             await on_progress(

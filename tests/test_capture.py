@@ -147,6 +147,15 @@ async def test_rpc_post_retries_refused_connection():
     assert sess.calls == 2
 
 
+async def test_rpc_post_does_not_retry_timeout():
+    # a timeout is a genuinely slow method (nil-param fast-crashes are fixed by sending {} args),
+    # so it propagates to the caller (-> UNREACHABLE) rather than tying up a worker on retries
+    sess = _Session([TimeoutError()])
+    with pytest.raises(TimeoutError):
+        await _rpc_post(sess, "http://x/rpc", {}, backoff=0)
+    assert sess.calls == 1
+
+
 async def test_rpc_post_gives_up_after_max_retries():
     sess = _Session([_Resp(503, {})] * 6)
     with pytest.raises(ConnectionError):

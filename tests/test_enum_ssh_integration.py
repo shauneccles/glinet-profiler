@@ -85,6 +85,18 @@ async def test_ssh_include_destructive_probes_reboot_last():
     assert called[-1] == ("acl", "reboot")  # destructive runs dead last
 
 
+async def test_probe_sends_empty_args_not_none():
+    seen_args = []
+
+    async def caller(service, method, args):  # noqa: ARG001
+        seen_args.append(args)
+        return {"error": {"code": -32601}}
+
+    await enumerate_device(caller, device_info={"model": "x", "firmware_version": "1"})
+    assert seen_args  # the catalog pass probed something
+    assert all(a == {} for a in seen_args)  # {} not None — avoids the router's nil-param crashes
+
+
 async def test_enumerate_respects_concurrency_limit():
     in_flight = 0
     max_seen = 0
