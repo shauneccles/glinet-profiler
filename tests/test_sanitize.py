@@ -56,6 +56,15 @@ def test_keeps_non_identifying_capabilities():
     assert caps["hardware_feature"]["simo"] is False  # explains why modem.* would error
 
 
+def test_keep_data_keeps_method_value():
+    kept = project_report(RAW, "mt6000_4.9.0", keep_data=True)
+    dropped = project_report(RAW, "mt6000_4.9.0")
+    assert "value" not in dropped["services"]["system"]["get_info"]  # default still drops it
+    # keep_data is a pure projection toggle: it keeps whatever value the enumerator already redacted
+    raw_value = RAW["services"]["system"]["get_info"]["value"]
+    assert kept["services"]["system"]["get_info"]["value"] == raw_value
+
+
 def test_drops_identifiers_and_values():
     out = project_report(RAW, "mt6000_4.9.0")
     for k in ("mac", "sn", "sn_bak"):  # identifiers dropped from the top level

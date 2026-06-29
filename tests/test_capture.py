@@ -85,6 +85,19 @@ async def test_capture_passes_dangerous_flags(monkeypatch):
     assert seen == {"dangerous": True, "include_destructive": True}
 
 
+async def test_capture_keep_data_keeps_value(monkeypatch):
+    async def fake_enumerate(
+        host, username, password, *, ssh, dangerous=False, include_destructive=False, on_progress
+    ):  # noqa: ARG001
+        return RAW
+
+    monkeypatch.setattr(capture_mod, "_enumerate", fake_enumerate)
+    kept = await capture("http://x", "root", "pw", keep_data=True)
+    assert "value" in kept["services"]["system"]["get_info"]  # local signature analysis
+    dropped = await capture("http://x", "root", "pw")
+    assert "value" not in dropped["services"]["system"]["get_info"]  # default: publishable
+
+
 async def test_capture_forwards_progress(monkeypatch):
     events = []
 

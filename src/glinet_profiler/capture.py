@@ -155,7 +155,7 @@ async def _enumerate(  # pylint: disable=too-many-locals,too-many-arguments
                 "message": "Probing the API surface…",
             }
         )
-        info_env = await caller("system", "get_info", None)
+        info_env = await caller("system", "get_info", {})
         info = info_env.get("result")
         device_info = info if isinstance(info, dict) else {}
         if dangerous:
@@ -197,6 +197,7 @@ async def capture(
     ssh: bool = True,
     dangerous: bool = False,
     include_destructive: bool = False,
+    keep_data: bool = False,
     on_progress: ProgressFn | None = None,
 ) -> dict[str, Any]:
     """Enumerate (read-only by default; SSH attempted by default) and return the sanitized profile.
@@ -205,6 +206,9 @@ async def capture(
     ``discovered``. ``dangerous`` additionally calls WRITE endpoints (changes config — spare
     routers); ``dangerous`` + ``include_destructive`` also calls DESTRUCTIVE methods last
     (reboot/reset/upgrade — sacrificial routers).
+
+    ``keep_data`` keeps each method's (secret-redacted) response value for LOCAL signature
+    analysis; the result then carries response data and is *not* registry-publishable.
 
     ``on_progress``, if given, is awaited with ``{"event": "progress", ...}`` dicts as the
     capture proceeds (ssh → login → probe → sanitize), for live UI/console feedback.
@@ -220,4 +224,4 @@ async def capture(
         on_progress=progress,
     )
     await progress({"event": "progress", "phase": "sanitize", "message": "Sanitizing profile…"})
-    return project_report(raw, device_id(raw.get("device", {})))
+    return project_report(raw, device_id(raw.get("device", {})), keep_data=keep_data)

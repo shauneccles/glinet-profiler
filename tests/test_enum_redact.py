@@ -21,6 +21,14 @@ def test_short_ambiguous_token_is_exact_match_only():
     assert out["location"] == "lounge"
 
 
+def test_redacts_mac_addresses_anywhere():
+    # MAC is a device identifier (incl. client MACs from clients.get_list) — scrub it
+    assert redact("94:83:C4:AA:BB:CC") == "<redacted>"
+    assert redact({"lan_mac": "94:83:C4:AA:BB:CC"}) == {"lan_mac": "<redacted>"}
+    assert redact("client 94-83-C4-AA-BB-CC joined") == "client <redacted> joined"
+    assert redact("just text") == "just text"
+
+
 def test_long_opaque_string_redacted_regardless_of_key():
     blob = "A1b2" * 20  # 80 chars, base64-ish
     out = redact({"blob": blob, "note": "short text is fine"})

@@ -20,8 +20,16 @@ _CAPABILITY_FIELDS = ("country_code", "software_feature", "hardware_feature")
 _METHOD_FIELDS = ("status", "error_code", "risk", "discovered_by", "covered_by", "params", "schema")
 
 
-def project_report(raw: dict[str, Any], device_id_str: str) -> dict[str, Any]:
-    """Project a raw enumerator report to the sanitized, publishable profile."""
+def project_report(
+    raw: dict[str, Any], device_id_str: str, *, keep_data: bool = False
+) -> dict[str, Any]:
+    """Project a raw enumerator report to the sanitized, publishable profile.
+
+    ``keep_data`` additionally keeps each method's response ``value`` (already secret-redacted by
+    the enumerator: password/key/serial/token/... scrubbed). This is for LOCAL signature analysis
+    only — the result is *not* a publishable profile (it carries response data, so the registry's
+    validator rejects it).
+    """
     device = raw.get("device", {})
     out: dict[str, Any] = {"id": device_id_str}
     for field in _DEVICE_FIELDS:
@@ -30,9 +38,10 @@ def project_report(raw: dict[str, Any], device_id_str: str) -> dict[str, Any]:
     capabilities = {field: device[field] for field in _CAPABILITY_FIELDS if field in device}
     if capabilities:
         out["capabilities"] = capabilities
+    method_fields = (*_METHOD_FIELDS, "value") if keep_data else _METHOD_FIELDS
     out["services"] = {
         service: {
-            method: {field: rec.get(field) for field in _METHOD_FIELDS}
+            method: {field: rec.get(field) for field in method_fields}
             for method, rec in methods.items()
         }
         for service, methods in raw.get("services", {}).items()

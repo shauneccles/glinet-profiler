@@ -41,6 +41,12 @@ def main(argv: list[str] | None = None) -> int:
         help="DANGER: also call DESTRUCTIVE methods (reboot/factory-reset/firmware), last. Implies --dangerous. Sacrificial routers only.",
     )
     parser.add_argument(
+        "--keep-data",
+        action="store_true",
+        help="keep each method's (secret-redacted) response value for local signature analysis. "
+        "The result carries response data, so it is LOCAL-ONLY and not registry-publishable.",
+    )
+    parser.add_argument(
         "--output", "-o", help="write the profile JSON here (default: <id>.json in the cwd)"
     )
     # web-UI mode flags (used when no IP is given)
@@ -81,6 +87,7 @@ async def _capture_cli(args: argparse.Namespace) -> int:
             ssh=not args.no_ssh,
             dangerous=dangerous,
             include_destructive=args.include_destructive,
+            keep_data=args.keep_data,
             on_progress=_progress,
         )
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -89,6 +96,16 @@ async def _capture_cli(args: argparse.Namespace) -> int:
 
     out = Path(args.output) if args.output else Path(f"{profile['id']}.json")
     out.write_text(json.dumps(profile, indent=2, sort_keys=True), encoding="utf-8")
+
+    if args.keep_data:
+        print(
+            f"\nProfile (with response data): {profile['model']} ({profile['firmware_version']}) -> {out}"
+        )
+        print("Status:  LOCAL-ONLY — kept secret-redacted response data for signature analysis.")
+        print(
+            "         Not registry-publishable (carries response values); do not submit this file."
+        )
+        return 0
 
     manifest = await fetch_manifest(args.registry_url)
     known = lookup(profile.get("model", ""), profile.get("firmware_version", ""), manifest)

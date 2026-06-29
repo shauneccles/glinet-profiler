@@ -31,6 +31,9 @@ _SECRET_TOKENS = (
     "csr",
 )
 _OPAQUE = re.compile(r"^[A-Za-z0-9+/=_-]+$")
+_MAC_VALUE = re.compile(
+    r"(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}"
+)  # device identifier; scrub anywhere
 
 
 def _key_is_secret(key: str) -> bool:
@@ -46,7 +49,7 @@ def _redact_str(value: str, key: str | None) -> str:
         return REDACTED
     if len(value) >= 64 and _OPAQUE.match(value):
         return REDACTED
-    return value
+    return _MAC_VALUE.sub(REDACTED, value)  # scrub MAC addresses (incl. client MACs) anywhere
 
 
 def redact(value: object, *, enabled: bool = True, _key: str | None = None) -> object:
