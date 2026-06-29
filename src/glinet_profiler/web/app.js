@@ -8,8 +8,8 @@ let submitUrl = "";
 
 const SW_LABELS = {
   adguard: "AdGuard Home", tor: "Tor", vpn: "VPN", obfuscation: "VPN obfuscation",
-  nas: "NAS / file sharing", ksmbd: "Samba (SMB)", sms_forward: "SMS forwarding",
-  bark: "Bark notifications", ipv6: "IPv6", mlo: "MLO (Wi-Fi 7)", vlan: "VLAN",
+  nas: "NAS / SMB file sharing", sms_forward: "SMS forwarding",
+  bark: "Bark parental controls", ipv6: "IPv6", mlo: "MLO (Wi-Fi 7)", vlan: "VLAN",
   ids_ips: "IDS / IPS", secondwan: "Dual WAN / failover", repeater_eap: "Repeater (WPA-Ent)",
   passthrough: "Modem passthrough",
 };
