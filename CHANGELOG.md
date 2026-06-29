@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.1.1...glinet-profiler-v0.2.0) (2026-06-29)
+
+
+### Features
+
+* --keep-data for local signature analysis; redact MAC addresses ([7cd7b08](https://github.com/shauneccles/glinet-profiler/commit/7cd7b08c298af0ab9ae1cd3a9734a68c65c4f393))
+* **capture:** retry transient backend saturation ([e0916cb](https://github.com/shauneccles/glinet-profiler/commit/e0916cb1f60173fbddf26e8e1afd8c981909d16c))
+* **sanitize:** keep non-identifying device capabilities ([9887431](https://github.com/shauneccles/glinet-profiler/commit/988743198232e38d9b9714a135a43c4f2aff4cab))
+
+
+### Bug Fixes
+
+* **probe:** send empty params object, not None ([d8b9225](https://github.com/shauneccles/glinet-profiler/commit/d8b92257d457e0320bd366da78ad0f39493baaa3))
+
 ## [0.1.1](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.1.0...glinet-profiler-v0.1.1) (2026-06-29)
 
 
