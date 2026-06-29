@@ -1,6 +1,6 @@
 [project]
 name = "glinet-profiler"
-version = "0.1.1"  # managed by release-please
+version = "0.2.0"  # managed by release-please
 description = "Local capture launcher + registry for GL.iNet device API profiles."
 readme = "README.md"
 license = "GPL-3.0-or-later"
