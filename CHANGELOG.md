@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.1.0...glinet-profiler-v0.1.1) (2026-06-29)
+
+
+### Performance Improvements
+
+* **capture:** auto-tune scan concurrency to the router's fcgiwrap worker count ([6274b13](https://github.com/shauneccles/glinet-profiler/commit/6274b13071681fc3d9a50358644d48a4c5c99131))
+
+
+### Documentation
+
+* disclose AI-assisted development in README ([841a3f7](https://github.com/shauneccles/glinet-profiler/commit/841a3f7135e7e9a4a0b9a9d174dc92a8fc2f20d1))
+
 ## [0.1.0](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.0.1...glinet-profiler-v0.1.0) (2026-06-28)
 
 
