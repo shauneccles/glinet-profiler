@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.0](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.2.0...glinet-profiler-v0.3.0) (2026-06-29)
+
+
+### Features
+
+* **enum:** Balanced rich-schema distiller (signature_of) ([bc8ffde](https://github.com/shauneccles/glinet-profiler/commit/bc8ffdebc118198924e8684af7246aa5d00d1bdb))
+* **sanitize:** publish rich signature in place of type-erased schema ([67e2879](https://github.com/shauneccles/glinet-profiler/commit/67e2879bd6ae987b49a0a3f15be4a026348e6fa7))
+* **web:** redesign launcher UI to match the registry ([47373fe](https://github.com/shauneccles/glinet-profiler/commit/47373fe3bc2bac763ffdf55f29e4e419dc228692))
+
+
+### Bug Fixes
+
+* **signature:** label HH:MM:SS time-of-day as &lt;datetime&gt;, not &lt;ipv6&gt; ([fa5fff3](https://github.com/shauneccles/glinet-profiler/commit/fa5fff359120bc130ad1830215e3ecdb93cd01a4))
+* **signature:** plug PII leaks found in adversarial review ([e2fdc5b](https://github.com/shauneccles/glinet-profiler/commit/e2fdc5b35fa43f96a602b200c1ea6ac2be15ba35))
+
+
+### Documentation
+
+* design spec for rich-schema registry entries ([c6bf05a](https://github.com/shauneccles/glinet-profiler/commit/c6bf05ace8544e7ac60cdd48a2c1baa2be61296a))
+* implementation plan for rich-schema (both repos) ([1ed99c9](https://github.com/shauneccles/glinet-profiler/commit/1ed99c9e74d32aa4d8b7f5a4b943be33a1aeedff))
+
 ## [0.2.0](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.1.1...glinet-profiler-v0.2.0) (2026-06-29)
 
 
