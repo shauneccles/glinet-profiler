@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.3.0...glinet-profiler-v0.3.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **web:** correct capability labels in launcher UI ([0451d9e](https://github.com/shauneccles/glinet-profiler/commit/0451d9e4480559fca15743273682d43ac3edebdf))
+
 ## [0.3.0](https://github.com/shauneccles/glinet-profiler/compare/glinet-profiler-v0.2.0...glinet-profiler-v0.3.0) (2026-06-29)
 
 
