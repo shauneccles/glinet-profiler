@@ -9,6 +9,11 @@ Your **password never leaves your machine**: it goes from your browser to a
 local server (`127.0.0.1`) to your own router. Nothing is uploaded unless you
 deliberately submit.
 
+> **Built with AI assistance.** Most of this code was written by Claude — human-directed,
+> reviewed change by change, and verified against real hardware. It's open source; read it
+> and judge for yourself. The read-only-by-default behaviour and the sanitization are the
+> parts to scrutinise.
+
 > **Why a local launcher and not a public site?** GL.iNet's RPC sends no CORS
 > headers, so a public browser page cannot talk to your local router. The
 > enumeration therefore runs server-side in this launcher (native Python,
